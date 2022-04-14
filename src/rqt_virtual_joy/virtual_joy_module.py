@@ -29,8 +29,8 @@ class MyPlugin(Plugin):
         parser.add_argument("-t", "--topic",
                       dest="topic",
                       type=str,
-                      help="Set topic to publish [default:/joy]",
-                      default="/joy")
+                      help="Set topic to publish [default:/notspot_joy/joy_ramped]",
+                      default="/notspot_joy/joy_ramped")
         parser.add_argument("-r", "--rate",
                       dest="rate",
                       type=float,
@@ -45,8 +45,12 @@ class MyPlugin(Plugin):
 
         args, unknowns = parser.parse_known_args(context.argv())
         if not args.quiet:
-            print 'arguments: ', args
-            print 'unknowns: ', unknowns
+            print('arguments: ', args)
+            print('unknowns: ', unknowns)
+
+        self.target_joy = Joy()
+        self.target_joy.axes = [0.,0.,1.,0.,0.,1.,0.,0.]
+        self.target_joy.buttons = [0,0,0,0,0,0,0,0,0,0,0]
 
         # Create QWidget
         self._widget = QWidget()
@@ -144,10 +148,16 @@ class MyPlugin(Plugin):
 
     def processTimerShot(self):
         joy = self.getROSJoyValue()
-        msg = Joy()
+
+        msg             = Joy()
+        msg.axes        = self.target_joy.axes
+        #msg.buttons     = self.target_joy.buttons
+
         msg.header.stamp = rospy.Time.now()
-        msg.axes.append(float(joy['x']))
-        msg.axes.append(float(joy['y']))
+        msg.axes[0]     = float(joy['x'])
+        msg.axes[1]     = float(joy['y'])
+        #msg.axes.append(float(joy['x']))
+        #msg.axes.append(float(joy['y']))
 
         button_num = 1
         while True:
